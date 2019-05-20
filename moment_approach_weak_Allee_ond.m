@@ -1,5 +1,5 @@
 % Moment- Approach fitting of stochastic birth-death-weak-Allee process for small cell
-% number data
+% number data on death!
 
 % This code is first attempt to use moment-approach (so mean and
 % variance)of N(t) trajectories to fit small cell number well data.
@@ -30,7 +30,7 @@ tau = 3;
 %birth_n = b*N; % birth hazard function
 %death_n = d*N; % death hazard function
 num_samps = 8000;
-num_iters =2000;
+num_iters = 2000;
 take_offs = 0;
 state = zeros(num_iters,num_samps);
 tstate = zeros(num_iters,num_samps);
@@ -43,11 +43,11 @@ for j = 1:num_samps
     N0 = N;
     time(1)= 0;
 for k = 2:num_iters
-    birth_n = (b*N-0.5.*(b-d).*N.*((A+tau)./(N+tau))); % birth 
+    birth_n = (b*N); % birth 
     if birth_n <0
         birth_n = 0;
     end
-    death_n = (d*N+0.5.*(b-d).*N.*((A+tau)./(N+tau))); % death 
+    death_n = (d*N+(b-d).*N.*((A+tau)./(N+tau))); % death 
     if N==0
         N=0;
     else
@@ -122,7 +122,7 @@ title(['Simulated N(t) trajectories for N_{0}=', num2str(N0),', b=', num2str(b),
 tstart=0;
 tint=2;
 
-tsamp = tstart:tint:100+tstart;
+tsamp = tstart:tint:336;
 for j = 1:num_samps
     tstoch = tstate(:,j);
     Nstoch = state(:,j);
@@ -165,21 +165,23 @@ C_init(4)= N0.^3;
 C_init(5)= N0.^4;
 C_init(6) = V0;
 
-        f = @(t,C) [((b-d)*C(1)*(1-((A+tau)./(C(1)+tau))));  % dN/dt
-           2.*C(2).*(b-d) + (b+d).*C(1) - 2.*(C(1).^2).*(b-d).*((A+tau)./(C(1)+tau)); %dN2/dt
-           2.*C(2).*(b-d) + (b+d).*C(1) - 2.*C(2).*(b-d).*((A+tau)./(C(1)+tau))-2.*C(1).*((b-d).*C(1).*(1-((A+tau)./(C(1)+tau)))); %dV/dt
-           3.*C(4).*(b-d) - 3.*(C(2)*C(1)).*(b-d).*((A+tau)./(C(1)+tau)) + 3.*C(2).*(b+d) + C(1).*(b-d)+...
-           -C(1).*(b-d).*((A+tau)./(C(1)+tau)); %dn3/dt
-           4.*C(5).*(b-d) - 4.*(C(4)*C(1)).*(b-d).*((A+tau)./(C(1)+tau)) + 6.*C(4).*(b+d) + 4.*C(2).*(b-d)+...
-           -4.*(C(1).^2).*(b-d).*((A+tau)./(C(1)+tau)) + C(1).*(b+d); %dn4/dt
-            4.*C(5).*(b-d) - 4.*C(5).*(b-d).*((A+tau)./(C(1)+tau)) + 6.*C(4).*(b+d) + 4.*C(2).*(b-d)+...
-           -4.*C(2).*(b-d).*((A+tau)./(C(1)+tau)) + C(1).*(b+d)+...
-           -4.*((C(1)).^3).*((b-d)*C(1)*(1-((A+tau)./(C(1)+tau))))]; %dV4/dt
-           
+
+f = @(t,C) [((b-d)*C(1)*(1-((A+tau)./(C(1)+tau))));  % dN/dt
+           2.*C(2).*(b-d) + (b+d).*C(1) - 2.*(C(1).^2).*(b-d).*((A+tau)./(C(1)+tau))+(b-d).*C(1).*((A+tau)./(C(1)+tau));
+           2.*C(2).*(b-d) + (b+d).*C(1) - 2.*C((2)).*(b-d).*((A+tau)./(C(1)+tau))+(b-d).*C(1).*((A+tau)./(C(1)+tau))+...
+           -2.*C(1).*((b-d)*C(1)*(1-((A+tau)./(C(1)+tau))));
+           3.*C(4).*(b-d) - 3.*(C(2).*C(1)).*(b-d).*((A+tau)./(C(1)+tau)) + 3.*C(2).*(b+d) + 3.*(C(1).^2).*(b-d).*((A+tau))./(C(1)+tau)+...
+           + C(1).*(b-d) - C(1).*(b-d).*((A+tau)./(C(1)+tau)); %dn3/dt
+           % fix n4-V4!!!
+            4.*C(5).*(b-d) - 4.*(C(4).*C(1)).*(b-d).*((A+tau)./(C(1)+tau)) + 6.*C(4).*(b+d) + 6.*(C(2).*C(1))*(b-d).*((A+tau)./(C(1)+tau)) + 4.*C(2).*(b-d)+...
+            -4.*(C(1).^2).*(b-d).*((A+tau)./(C(1)+tau)) + C(1).*(b+d) + C(1).*(b-d).*((A+tau)./(C(1)+tau)); %dn4/dt
+             4.*C(5).*(b-d) - 4.*C(5).*(b-d).*((A+tau)./(C(1)+tau)) + 6.*C(4).*(b+d) + 6.*C(4).*(b-d).*((A+tau)./(C(1)+tau)) + 4.*C(2).*(b-d)+...
+            -4.*C(2).*(b-d).*((A+tau)./(C(1)+tau)) + C(1).*(b+d) + C(1).*(b-d).*((A+tau)./(C(1)+tau))+...
+            -4.*((C(1)).^3).*((b-d)*C(1)*(1-((A+tau)./(C(1)+tau))))]; %dV4dt
            
 options1 = odeset('Refine',1);  
 options = odeset(options1,'NonNegative',1:6);
-[t,C]=ode45(f, tsamp,C_init, options);
+[t,C]=ode45(f, tsamp,C_init(1:6), options);
 
 mu_C= C(:,1);
 n2_C=C(:,2);
@@ -196,17 +198,18 @@ hold on
 plot(tsamp, mu_C, 'k-', 'LineWidth',2)
 xlabel('time (hours)')
 ylabel('mean cell number')
-title('Weak Allee on birth & death mean', 'FontSize', 14)
+title('Weak Allee model on death mean', 'FontSize', 14)
 legend('mean n simulated data', 'expected mean n')
 legend boxoff
-
+xlim([0 336])
+% 
 % subplot(1,3,2)
-% plot(tsamp, n2_data(1:end), 'b*')
+% plot(tsamp, n2_data(1:end), 'c.')
 % hold on
 % plot(tsamp, n2_C, 'k.', 'LineWidth',2)
 % xlabel('time (hours)')
 % ylabel('<n2>')
-% title('Expected vs. simulated <n2> weak Allee model')
+% title('Weak Allee model on death var')
 % legend('n2 simulated data', 'expected n2')
 % legend boxoff
 
@@ -216,9 +219,10 @@ hold on
 plot(tsamp, var_C, 'k-', 'LineWidth',2)
 xlabel('time (hours)')
 ylabel('variance')
-title('Weak Allee on birth & death variance', 'FontSize', 14)
+title('Weak Allee model on death variance', 'FontSize', 14)
 legend('var simulated data', 'expected var')
 legend boxoff
+xlim([0 336])
 
 
 figure;

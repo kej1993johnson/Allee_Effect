@@ -42,11 +42,11 @@ for j = 1:num_samps
     N0 = N;
     time(1)= 0;
 for k = 2:num_iters
-    birth_n = (b*N-b*A); % birth 
+    birth_n = (b*N-0.5.*(b-d).*A); % birth 
     if birth_n <0
         birth_n = 0;
     end
-    death_n = (d*N-d*A); % death 
+    death_n = (d*N+0.5.*(b-d).*A); % death 
     if N==0
         N=0;
     else
@@ -182,14 +182,13 @@ C_init(6) = V0;
 
 
 f = @(t,C) [((b-d)*C(1)-(b-d)*A); % dn/dt
-             2*C(2).*(b-d) - (2*C(1).*(b-d)*A) + (C(1).*(b+d))-((b-d)*A);   % dn2/dt
-            (2*C(2).*(b-d) - (2*C(1).*(b-d)*A) + (C(1).*(b+d))-((b-d)*A)-(2*C(1).*((b-d)*C(1)-(b-d)*A))); % dV/dt
-            (3*C(4).*(b-d)) + (3*C(2).*(b+d)-3*C(2)*(b-d)*A) - (3*C(1).*(b-d)*A)-((b-d)*A);%dn3dt
-            (4*C(5).*(b-d)) + (6*C(4).*(b+d))-(4*C(4)*(b-d)*A)+(4*C(2).*(b-d))-(6*C(2).*(b-d)*A)+ (C(1).*(b+d))+...
-            (4*C(1).*(b-d)*A)-((b-d)*A); %dn4dt
-            (4*C(5).*(b-d)) + (6*C(4).*(b+d))-(4*C(4).*(b-d)*A)+(4*C(2).*(b-d))-(6*C(2).*(b-d)*A)+ (C(1).*(b+d))+...
-            (4*C(1).*(b-d)*A)-((b-d)*A)-(4.*((C(1)).^3)*(((b-d).*C(1)-(b-d)*A)))];
-
+             2*C(2).*(b-d)- 2.*C(1)*(b-d)*A + C(1).*(b+d);   % dn2/dt
+              2*C(2).*(b-d)- 2.*C(1)*(b-d)*A + C(1).*(b+d)- 2.*C(1).*((b-d)*C(1)-(b-d)*A); % dV/dt
+             (3.*C(4).*(b-d)) + (3.*C(2).*(b+d))-(3.*C(2).*(b-d).*A) + (C(1).*(b-d)) - ((b-d)*A);%dn3dt
+            (4.*C(5).*(b-d)) + (6.*C(4).*(b+d))-(4.*C(4).*(b-d).*A)+(4.*C(2).*(b-d))+ (C(1).*(b+d))+...
+             (4.*C(1).*(b-d).*A); %dn4dt
+             (4.*C(5).*(b-d)) + (6.*C(4).*(b+d))-(4.*C(4).*(b-d).*A)+(4.*C(2).*(b-d))+ (C(1).*(b+d))+...
+             (4.*C(1).*(b-d).*A)- (4.*((C(1)).^3).*(((b-d).*C(1)-(b-d).*A)))];
 options1 = odeset('Refine',1);  
 options = odeset(options1,'NonNegative',1:6);
 [t,C]=ode45(f, tsamp,C_init, options);
@@ -210,32 +209,64 @@ var4_data = n_4_data - ((mu_data).^4);
 %var_data = (std(Nsamp,0,2).^2);
 
 figure;
-subplot(1,3,1)
+subplot(1,2,1)
 plot(tsamp, mu_data(1:end), 'r*')
 hold on
 plot(tsamp, mu_C, 'k-', 'LineWidth',2)
 xlabel('time (hours)')
-ylabel('<n>')
-title('Expected vs. simulated <n> Allee model')
+ylabel('mean cell number')
+title('Strong Allee on birth & death mean', 'FontSize', 14)
 legend('mean n simulated data', 'expected mean n')
 legend boxoff
 
-subplot(1,3,2)
-plot(tsamp, n_2_data(1:end), 'g*')
+% subplot(1,3,2)
+% plot(tsamp, n_2_data(1:end), 'g*')
+% hold on
+% plot(tsamp, n2_C, 'b.', 'LineWidth',2)
+% xlabel('time (hours)')
+% ylabel('<n2>')
+% title('Expected vs. simulated <n2>')
+% legend('<n2> in simulated data', 'expected <n2>')
+% legend boxoff
+
+subplot(1,2,2)
+plot(tsamp, var_data(1:end), 'g*')
 hold on
-plot(tsamp, n2_C, 'b.', 'LineWidth',2)
+plot(tsamp, v2_C, 'k-', 'LineWidth',2)
 xlabel('time (hours)')
-ylabel('<n2>')
-title('Expected vs. simulated <n2>')
-legend('<n2> in simulated data', 'expected <n2>')
+ylabel('Variance')
+title('Strong Allee on birth & death variance', 'FontSize', 14)
+legend('Variance in simulated data', 'expected Variance')
+legend boxoff
+%%
+
+figure;
+subplot(1,3,1)
+plot(tsamp, n_3_data(1:end), 'm*')
+hold on
+plot(tsamp, n3_C, 'b.', 'LineWidth',2)
+xlabel('time (hours)')
+ylabel('<n3>')
+title('Expected vs. simulated <n3>')
+legend('<n3> in simulated data', 'expected <n3>')
+legend boxoff
+
+subplot(1,3,2)
+plot(tsamp, n_4_data(1:end), 'g*')
+hold on
+plot(tsamp, n4_C, 'b-', 'LineWidth',2)
+xlabel('time (hours)')
+ylabel('<n4>')
+title('Expected vs.  simulated <n4>')
+legend('<n4> in simulated data', 'expected <n4>')
 legend boxoff
 
 subplot(1,3,3)
-plot(tsamp, var_data(1:end), 'm*')
+plot(tsamp, var4_data(1:end), 'r-')
 hold on
-plot(tsamp, v2_C, 'b.', 'LineWidth',2)
+plot(tsamp, v4_C, 'b-', 'LineWidth',1)
 xlabel('time (hours)')
-ylabel('Variance')
-title('Expected vs.  simulated Variance')
-legend('Variance in simulated data', 'expected Variance')
+ylabel('Var4')
+title('Expected vs.  simulated Var4')
+legend('<n4> in simulated data', 'expected <n4>')
 legend boxoff

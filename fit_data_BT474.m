@@ -15,7 +15,7 @@
 
 close all; clear all; clc
 
-%% Run this chunk to load in 2 and 5 cell per well data sets
+%% Run this chunk to load in form all seeding numbers well data sets
 S = load('../out/BTall.mat');
 BT= S.BT;
 %% Run this chunk to load pilot study data
@@ -23,6 +23,7 @@ S = load('../out/BTpsdata.mat');
 BT= S.BT;
 %%
 for j = 1:length(BT)
+    if BT(j).badfit == 0 && BT(j).persist == 0
     % want to fit on all but t=0 (we give it this)
     time = [];
     N = [];
@@ -52,14 +53,25 @@ for j = 1:length(BT)
     
     BT(j).maxN = max(N);
     BT(j).lastN = (BT(j).cellnum(end));
+    end
     if BT(j).persist == 1
         BT(j).g=0;
-        BT(j).cellnum = repmat(N0,length(BT(j).time),1);
+        BT(j).cellnum = repmat(BT(j).N0,length(BT(j).time),1);
+        BT(j).Nmodel = repmat(BT(j).N0,length(BT(j).time),1);
     end
     
+   
     if BT(j).dieoff==1
       [d, resnorm, reslsq]= lsqnonlin(@fit_singleexpd, params0, LB, UB, options, N, N0, time);
        BT(j).g=-d; 
+    end
+end
+%%
+for j = 1:length(BT)
+    if ~isempty(BT(j).Rsq)
+    if BT(j).Rsq < 0.6 && BT(j). badfit == 0 && BT(j).dieoff == 0 && BT(j).persist == 0
+        BT(j).badfit =1;
+    end
     end
   
      
@@ -103,7 +115,7 @@ for i = 1:length(BT)
         hold on
     end
 end
-xlim ([ 0 336])
+xlim ([ 0 328])
 
 xlabel ('time (hours)')
 ylabel('number of cells')
@@ -120,14 +132,43 @@ xlabel ('time (hours)')
 ylabel('log(N/N0)')
 xlim ([ 0 336])
 title ('Normalized cell number vs. N0')
+%% Plot example of raw data
+figure;
+for i = 1:length(BT)
+    if BT(i). badfit == 0 && BT(i).N0==4
+        plot(BT(i).time, BT(i).cellnum, 'color', BT(i).color)
+        hold on
+    end
+%     if BT(i). badfit == 0 && BT(i).N0==5
+%         plot(BT(i).time, BT(i).cellnum, 'color', BT(i).color)
+%         hold on
+%     end
+    if BT(i). badfit == 0 && BT(i).N0==12
+        plot(BT(i).time, BT(i).cellnum, 'color', BT(i).color)
+        hold on
+    end
+end
+xlim ([ 0 328])
+xlabel ('time (hours)')
+ylabel('number of cells')
+title ('Cell number trajectories colored by N0')
 
 %% Separate by N0
-uniqN0=[4 8 16];
+uniqN0 = [];
+N0list = [];
+for j = 1:length(BT)
+    if ~isnan(BT(j).N0)
+    N0list =vertcat(N0list, BT(j).N0);
+    end
+    
+end
+uniqN0 = unique(N0list);
+%%
 figure;
-for j = 1:3
-subplot(1,3,j)
+for j = 1:length(uniqN0)
+subplot(1,length(uniqN0),j)
 for i = 1:length(BT)
-    if  BT(i).badfit == 0 && BT(i).Nseed == uniqN0(j)
+    if  BT(i).badfit == 0 && BT(i).N0 == uniqN0(j)
         plot(BT(i).time, BT(i).cellnum, 'color', BT(i).color)
         hold on
     end
@@ -136,13 +177,14 @@ end
 xlim ([ 0 250])
 ylim([ 0 300])
 xlabel ('time (hours)')
-ylabel('number of cells')
-title ('Cell number trajectories colored by N0')
+ylabel('N')
+title (['N0=', num2str(uniqN0(j))])
 end
 
 %% Plot example trajectories
 figure;
 for j = 1:length(BT)
+    if BT(j).badfit == 0 && BT(j).persist ==0
     hold off
     plot(BT(j).time, BT(j).cellnum,'*')
     hold on
@@ -150,6 +192,7 @@ for j = 1:length(BT)
     xlabel('time')
     ylabel('N')
     title(['N_{0}= ',num2str(BT(j).N0),', R-squared =', num2str(BT(j).Rsq), ', g=', num2str(BT(j).g)])
+    end
     pause
 
 end
@@ -161,11 +204,7 @@ end
     % variance of per capita growth rate
  
  % find groups by N0
- for i = 1:length(BT)
-     N0list(i,1) = BT(i).N0;
- end
- 
- uniqN0= unique(N0list); % get list of unique N0s
+
  
  for i = 1:length(uniqN0)
     BTsum(i).N0 = uniqN0(i);
@@ -200,12 +239,12 @@ end
  % need to make a uniform time vector for each initial cell number
  % this will likely change for each cell number ( higher N, less time)
  for i = 1:length(uniqN0)
-     BTsum(i).timevec =0:4:((round(min(BTsum(i).tmin))./4)*4); % makes a uniform time vector
+     BTsum(i).timevec =0:4:324; % makes a uniform time vector
      BTsum(i).Nmat = [];
  end
 
  for i= 1:length(uniqN0)
-    BTsum(i).pct_takeoff = 100*(1-BTsum(i).dieoffs-BTsum(i).persisters)./(BTsum(i).num-BTsum(i).badfits);
+    BTsum(i).pct_takeoff = 100*(1-BTsum(i).dieoffs-BTsum(i).persisters)./(BTsum(i).num);
     BTsum(i).var_g = (std(BTsum(i).gtot))^2;
     BTsum(i).norm_var = BTsum(i).var_g/BTsum(i).N0;
     BTsum(i).mean_g = mean(BTsum(i).gtot);
@@ -216,24 +255,18 @@ end
 % time which will be used for the stochastic parameter estimation
 %%
 for j = 1:length(BTsum)
-    tsamp = BTsum(j).timevec;
+    tsamp = 0:4:324;
  for k = 1:length(BT)
      % note change depending on whether or not we want to include badfits
      if BT(k).N0 == BTsum(j).N0 && BT(k).badfit ==0
-         tstoch = BT(k).time;
-         Nstoch = BT(k).cellnum;
-         Nsamp = [];
-        for i = 1:length(tsamp)
-        % find nearest tstate that is less that tsamp
-        ind =find(tstoch<=tsamp(i),1,'last');
-        tfind = tstoch(ind);
-        Nsamp(i,1)=Nstoch(ind);
-        end
+        Nsamp=BT(k).cellnum(1:82);
+     end
         BTsum(j).Nmat= horzcat(BTsum(j).Nmat, Nsamp);
+        Nsamp = [];
      end
 end
 
-end
+
 %%
 % Now find the measured mean and variance at each uniformly sampled time
 % point
@@ -261,7 +294,7 @@ end
 xlabel ('N0')
 ylabel ('mean growth rate')
 %xlim ([ 0, 1000])
-title ('Average growth rate vs. N_{0} w/ exclusions')
+title ('Average growth rate vs. N_{0}')
 
 %% mean growth rate model trajectories
 figure;
@@ -287,6 +320,109 @@ ylabel('log(N/N0)')
 xlim ([ 0 336])
 title ('Normalized cell number vs. N0')
 
+%% Same plot but sample a few
+figure;
+subplot(1,3,1)
+timemat = [];
+timetotvec2 = [];
+Ntotvec2 = [];
+for j = 1:length(BTsum)
+    if BTsum(j).N0 == 2
+        timemat = repmat(BTsum(j).timevec, size(BTsum(j).Nmat,2),1);
+        timemat = timemat';
+
+timetotvec1 = reshape(timemat,size(timemat,1)*size(timemat,2), 1);
+Ntotvec1 = reshape(BTsum(j).Nmat, size(timemat,1)*size(timemat,2),1);
+    end
+    
+end
+hold on
+timemat = [];
+timetotvec2 = [];
+Ntotvec2 = [];
+for j = 1:length(BTsum)
+    if BTsum(j).N0 == 4
+        timemat = repmat(BTsum(j).timevec, size(BTsum(j).Nmat,2),1);
+        timemat = timemat';
+
+timetotvec2 = reshape(timemat,size(timemat,1)*size(timemat,2), 1);
+Ntotvec2 = reshape(BTsum(j).Nmat, size(timemat,1)*size(timemat,2),1);
+    end
+end
+timemat3 = [];
+timetotvec3 = [];
+Ntotvec = [];
+for j = 1:length(BTsum)
+    if BTsum(j).N0 == 10
+        timemat = repmat(BTsum(j).timevec, size(BTsum(j).Nmat,2),1);
+        timemat = timemat';
+
+timetotvec3 = reshape(timemat,size(timemat,1)*size(timemat,2), 1);
+Ntotvec3 = reshape(BTsum(j).Nmat, size(timemat,1)*size(timemat,2),1);
+    end
+
+end
+plot(timetotvec1, Ntotvec1,'.', 'color', 'r')
+    hold on
+  plot(timetotvec2, Ntotvec2,'.', 'color', 'g')
+    hold on  
+plot(timetotvec3, Ntotvec3,'.', 'color', 'b')
+    hold on
+xlabel('time (hours)')
+ylabel ('Number of cells')
+title ('Raw data cell number trajectories')
+legend ('N_{0}= 2', 'N_{0}= 4', 'N_{0}= 10', 'Location', 'NorthWest')
+legend boxoff
+xlim ([0 328])
+
+
+subplot(1,3,2)
+for i = 1:length(BTsum)
+        if BTsum(i).N0 ==2
+        plot(BTsum(i).timevec, BTsum(i).model_g, 'color', 'r', 'Linewidth', 2)
+        hold on
+        text(BTsum(i).timevec(end-10), BTsum(i).model_g(end-10),['N_{0}=', num2str(BTsum(i).N0)], 'FontSize',8)
+        end
+        if BTsum(i).N0 ==4
+        plot(BTsum(i).timevec, BTsum(i).model_g, 'color', 'g','Linewidth', 2)
+        hold on
+        text(BTsum(i).timevec(end-10), BTsum(i).model_g(end-10),['N_{0}=', num2str(BTsum(i).N0)], 'FontSize',8)
+        end
+        if BTsum(i).N0 ==10
+        plot(BTsum(i).timevec, BTsum(i).model_g, 'color', 'b', 'Linewidth', 2)
+        hold on
+        text(BTsum(i).timevec(end-10), BTsum(i).model_g(end-10),['N_{0}=', num2str(BTsum(i).N0)], 'FontSize',8)
+        end
+end
+xlim ([ 0 328])
+xlabel ('time (hours)')
+ylabel('number of cells')
+title ('Mean growth rate model by N0')
+subplot(1,3,3)
+for i = 1:length(BTsum)
+        if BTsum(i).N0 ==2
+        plot(BTsum(i).timevec, log(BTsum(i).model_g./BTsum(i).N0), 'color', 'r','Linewidth', 2)
+        hold on
+        text(BTsum(i).timevec(end-10), log(BTsum(i).model_g(end-10)./BTsum(i).N0),['N_{0}=', num2str(BTsum(i).N0)], 'FontSize',8)
+        end
+        if BTsum(i).N0 ==4
+        plot(BTsum(i).timevec, log(BTsum(i).model_g./BTsum(i).N0), 'color', 'g','Linewidth', 2)
+        hold on
+        text(BTsum(i).timevec(end-10), log(BTsum(i).model_g(end-10)./BTsum(i).N0),['N_{0}=', num2str(BTsum(i).N0)], 'FontSize',8)
+        end
+        if BTsum(i).N0 ==10
+        plot(BTsum(i).timevec, log(BTsum(i).model_g./BTsum(i).N0), 'color', 'b','Linewidth', 2)
+        hold on
+        text(BTsum(i).timevec(end-10), log(BTsum(i).model_g(end-10)./BTsum(i).N0),['N_{0}=', num2str(BTsum(i).N0)], 'FontSize',8)
+        end
+        
+end
+xlabel ('time (hours)')
+ylabel('log(N/N0)')
+xlim ([ 0 328])
+title ('Normalized cell number vs. N0')
+
+
 %% plot the uniform time sampled data for N0=2
 
 figure;
@@ -297,7 +433,7 @@ hold on
 end
 plot(BTsum(2).timevec, BTsum(2).mu_t,'r-', 'LineWidth', 3)
 xlabel ('time')
-xlim([0 336])
+xlim([0 BTsum(2).timevec(end)])
 ylabel('number of cells')
 title('Cell number trajectories for N0=2 with mean')
 subplot (1,2,2)
@@ -306,7 +442,7 @@ plot(BTsum(2).timevec, BTsum(2).Nmat(:,j),'b.')
 hold on
 end
 plot(BTsum(2).timevec, BTsum(2).var_t,'g-', 'LineWidth', 3)
-xlim([ 0 336])
+xlim([ 0 BTsum(2).timevec(end)])
 xlabel ('time')
 ylabel('number of cells')
 title('Cell number trajectories for N0=2 with variance')

@@ -766,21 +766,21 @@ BTsum(j).varfit = V_fitJst;
 end
 
 %% Plot fit versus data
-
-for j = 3%:length(BTsum)
+figure;
+for j = 9%:length(BTsum)
     subplot(1,2,1)
-    plot(BTsum(j).timevec(2:end), BTsum(j).mufit, 'r-', 'LineWidth',2)
+    plot(BTsum(j).timevec(2:end), BTsum(j).mu_fitMC, 'r-', 'LineWidth',2)
     hold on
     plot(BTsum(j).timevec, BTsum(j).mu_t,'b*-')
     xlabel('time (hours)')
     ylabel('mean cell number')
-    title('fit of mean cell number Allee model')
+    title('fit of mean cell number model')
     
     subplot(1,2,2)
-    plot(BTsum(j).timevec(2:end), BTsum(j).varfit, 'g-', 'LineWidth',2)
+    plot(BTsum(j).timevec(2:end), BTsum(j).var_fitMC, 'g-', 'LineWidth',2)
     hold on
     plot(BTsum(j).timevec, BTsum(j).var_t,'y*-')
     xlabel('time (hours)')
     ylabel('variance in cell number')
-    title('fit of variance in cell number Allee model')
+    title('fit of variance in cell number model')
 end

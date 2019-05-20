@@ -17,6 +17,36 @@ sz(2,1:2) = size(N2);
 sz(2,2)=sz(2,2)-1;
 sz(:,3)= cumsum(sz(:,2));
 
+[N3, T3] =xlsread('../data/BT_474_Nseed10_7_12wflags.xls');
+sz(3,1:2) = size(N3);
+sz(3,2)=sz(3,2)-1;
+sz(:,3)= cumsum(sz(:,2));
+
+[N4, T4] =xlsread('../data/BT_474_Nseed67_30wflags.xls');
+sz(4,1:2) = size(N4);
+sz(4,2)=sz(4,2)-1;
+sz(:,3)= cumsum(sz(:,2));
+
+[N5, T5] =xlsread('../data/BT_474_Nseed15802wflags.xls');
+sz(5,1:2) = size(N5);
+sz(5,2)=sz(5,2)-1;
+sz(:,3)= cumsum(sz(:,2));
+
+[N6, T6] =xlsread('../data/BT-474_Nseed12_8_16wflags.xls');
+sz(6,1:2) = size(N6);
+sz(6,2)=sz(6,2)-1;
+sz(:,3)= cumsum(sz(:,2));
+
+[N7, T7] =xlsread('../data/BT-474_Nseed8_8_16wflags.xls');
+sz(7,1:2) = size(N7);
+sz(7,2)=sz(7,2)-1;
+sz(:,3)= cumsum(sz(:,2));
+
+[N8, T8] =xlsread('../data/BT-474_Nseed_large.xls');
+sz(8,1:2) = size(N8);
+sz(8,2)=sz(8,2)-1;
+sz(:,3)= cumsum(sz(:,2));
+
 % [Nr, Tr] =xlsread('../data/BT-474_Nseed_range.xls');
 % sz(3,1:2) = size(Nr);
 % sz(3,2)=sz(3,2)-1;
@@ -86,6 +116,7 @@ for i = sz(1,3)+1:sz(2,3)
         BT(i).dieoff = 0;
         BT(i).tdieoff = NaN;
         BT(i).persist = 0;
+        BT(i).N0 = NaN;
     end
     
     if N2(end-1,i-sz(1,3)+1) ==0
@@ -108,6 +139,223 @@ for i = sz(1,3)+1:sz(2,3)
     end
     
 
+end
+%% This chunk adds in data from 7-12-18 data set (10 cells per well)
+for i = sz(2,3)+1:sz(3,3)
+    BT(i).time = round(N3(1:end-2,1));
+    BT(i).cellnum = N3(1:end-2,i-sz(2,3)+1);
+    BT(i).N0 = N3(1, i-sz(2,3)+1);
+    BT(i).Nseed = 10;
+    BT(i).date = '7-12-18';
+    BT(i).well = T3(1, i-sz(2,3)+1);
+    if N3(end,i-sz(2,3)+1) ==3
+        BT(i).badfit = 1;
+        BT(i).dieoff = 0;
+        BT(i).tdieoff = NaN;
+        BT(i).persist = 0;
+        BT(i).N0 = NaN;
+    end
+    
+    if N3(end,i-sz(2,3)+1) ==0
+        BT(i).badfit = 0;
+        BT(i).dieoff = 1;
+        BT(i).tdieoff = N3(end, i-sz(2,3)+1);
+        BT(i).persist = 0;
+    end
+    if N3(end,i-sz(2,3)+1) ==2
+        BT(i).badfit = 0;
+        BT(i).dieoff = 0;
+        BT(i).tdieoff = NaN;
+        BT(i).persist = 1;
+    end
+    if N3(end,i-sz(2,3)+1) ==1
+        BT(i).badfit = 0;
+        BT(i).dieoff = 0;
+        BT(i).tdieoff = NaN;
+        BT(i).persist = 0;
+    end
+    
+
+end
+%% This chunk adds in data from 7-30-18 data set (6 cells per well)
+for i = sz(3,3)+1:sz(4,3)
+    BT(i).time = round(N4(1:end-1,1));
+    BT(i).cellnum = N4(1:end-1,i-sz(3,3)+1);
+    BT(i).N0 = N4(1, i-sz(3,3)+1);
+    BT(i).Nseed = 6;
+    BT(i).date = '7-30-18';
+    BT(i).well = T4(1, i-sz(3,3)+1);
+    if N4(end,i-sz(3,3)+1) ==3
+        BT(i).badfit = 1;
+        BT(i).dieoff = 0;
+        BT(i).tdieoff = NaN;
+        BT(i).persist = 0;
+        BT(i).N0 = NaN;
+    end
+    
+    if N4(end,i-sz(3,3)+1) ==0
+        BT(i).badfit = 0;
+        BT(i).dieoff = 1;
+        BT(i).tdieoff = N3(end, i-sz(3,3)+1);
+        BT(i).persist = 0;
+    end
+    if N4(end,i-sz(3,3)+1) ==2
+        BT(i).badfit = 0;
+        BT(i).dieoff = 0;
+        BT(i).tdieoff = NaN;
+        BT(i).persist = 1;
+    end
+    if N4(end,i-sz(3,3)+1) ==1
+        BT(i).badfit = 0;
+        BT(i).dieoff = 0;
+        BT(i).tdieoff = NaN;
+        BT(i).persist = 0;
+    end
+    
+
+end
+
+%% This chunk adds in data from 8-02-18 data set (15 cells per well)
+for i = sz(4,3)+1:sz(5,3)
+    BT(i).time = round(N5(1:end-1,1));
+    BT(i).cellnum = N5(1:end-1,i-sz(4,3)+1);
+    BT(i).N0 = N5(1, i-sz(4,3)+1);
+    BT(i).Nseed = 15;
+    BT(i).date = '8-02-18';
+    BT(i).well = T5(1, i-sz(4,3)+1);
+    if N5(end,i-sz(4,3)+1) ==3
+        BT(i).badfit = 1;
+        BT(i).dieoff = 0;
+        BT(i).tdieoff = NaN;
+        BT(i).persist = 0;
+        BT(i).N0 = NaN;
+    end
+    
+    if N5(end,i-sz(4,3)+1) ==0
+        BT(i).badfit = 0;
+        BT(i).dieoff = 1;
+        BT(i).tdieoff = N5(end, i-sz(4,3)+1);
+        BT(i).persist = 0;
+    end
+    if N5(end,i-sz(4,3)+1) ==2
+        BT(i).badfit = 0;
+        BT(i).dieoff = 0;
+        BT(i).tdieoff = NaN;
+        BT(i).persist = 1;
+    end
+    if N5(end,i-sz(4,3)+1) ==1
+        BT(i).badfit = 0;
+        BT(i).dieoff = 0;
+        BT(i).tdieoff = NaN;
+        BT(i).persist = 0;
+    end
+    
+
+end
+%% This chunk adds in data from 8-16-18 data set (12 cells per well)
+for i = sz(5,3)+1:sz(6,3)
+    BT(i).time = round(N6(1:end-1,1));
+    BT(i).cellnum = N6(1:end-1,i-sz(5,3)+1);
+    BT(i).N0 = N6(1, i-sz(5,3)+1);
+    BT(i).Nseed = 12;
+    BT(i).date = '8-16-18';
+    BT(i).well = T6(1, i-sz(5,3)+1);
+    if N6(end,i-sz(5,3)+1) ==3
+        BT(i).badfit = 1;
+        BT(i).dieoff = 0;
+        BT(i).tdieoff = NaN;
+        BT(i).persist = 0;
+        BT(i).N0 = NaN;
+    end
+    
+    if N6(end,i-sz(5,3)+1) ==0
+        BT(i).badfit = 0;
+        BT(i).dieoff = 1;
+        BT(i).tdieoff = N6(end, i-sz(5,3)+1);
+        BT(i).persist = 0;
+    end
+    if N6(end,i-sz(5,3)+1) ==2
+        BT(i).badfit = 0;
+        BT(i).dieoff = 0;
+        BT(i).tdieoff = NaN;
+        BT(i).persist = 1;
+    end
+    if N6(end,i-sz(5,3)+1) ==1
+        BT(i).badfit = 0;
+        BT(i).dieoff = 0;
+        BT(i).tdieoff = NaN;
+        BT(i).persist = 0;
+    end
+    
+
+end
+%% This chunk adds in data from 8-16-18 data set (8 cells per well)
+for i = sz(6,3)+1:sz(7,3)
+    BT(i).time = round(N7(1:end-1,1));
+    BT(i).cellnum = N7(1:end-1,i-sz(6,3)+1);
+    BT(i).N0 = N7(1, i-sz(6,3)+1);
+    BT(i).Nseed = 8;
+    BT(i).date = '8-16-18';
+    BT(i).well = T7(1, i-sz(6,3)+1);
+    if N7(end,i-sz(6,3)+1) ==3
+        BT(i).badfit = 1;
+        BT(i).dieoff = 0;
+        BT(i).tdieoff = NaN;
+        BT(i).persist = 0;
+        BT(i).N0 = NaN;
+    end
+    
+    if N7(end,i-sz(6,3)+1) ==0
+        BT(i).badfit = 0;
+        BT(i).dieoff = 1;
+        BT(i).tdieoff = N7(end, i-sz(6,3)+1);
+        BT(i).persist = 0;
+    end
+    if N7(end,i-sz(6,3)+1) ==2
+        BT(i).badfit = 0;
+        BT(i).dieoff = 0;
+        BT(i).tdieoff = NaN;
+        BT(i).persist = 1;
+    end
+    if N7(end,i-sz(6,3)+1) ==1
+        BT(i).badfit = 0;
+        BT(i).dieoff = 0;
+        BT(i).tdieoff = NaN;
+        BT(i).persist = 0;
+    end
+    
+
+end
+%% This chunk adds in data from large data set
+for j = 1:length(BT)
+    BT(j).V0 = 0;
+end
+
+for i = sz(7,3)+1:sz(8,3)
+    BT(i).time = round(N8(1:end-1,1));
+    BT(i).cellnum = N8(1:end-1,i-sz(7,3)+1);
+    BT(i).N0 = N8(1, i-sz(7,3)+1);
+    BT(i).date = '8-16-18';
+    BT(i).well = T8(1, i-sz(7,3)+1);
+        BT(i).badfit = 0;
+        BT(i).dieoff = 0;
+        BT(i).tdieoff = NaN;
+        BT(i).persist = 0;
+        BT(i).V0 = 0;
+
+end
+for i = sz(7,3)+1:sz(8,3)
+    cell512 = { 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10', 'B11', 'C8', 'C9', 'C10', 'C11',...
+        'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7',...
+        'D8', 'D9', 'D10', 'D11'};
+        cell1024= {'E10', 'E11', 'E6', 'E7', 'E8', 'E9', 'E2', 'E3', 'E4', 'E5','F2', 'F3', 'F4', 'F5'...
+       'F6', 'F7', 'F8', 'F9','F10', 'F11', 'G10', 'G11', 'G6', 'G7', 'G8', 'G9', 'G10', 'G2', 'G3', 'G4', 'G5'};
+    if contains(BT(i).well, cell512 )
+        BT(i).Nseed = 512;
+    end
+    if contains(BT(i).well, cell1024)
+        BT(i).Nseed = 1024;
+    end
 end
 
 %% DONT RUN This chunk adds in wide range data from the pilot study 

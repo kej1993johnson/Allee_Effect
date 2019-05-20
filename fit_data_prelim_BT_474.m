@@ -23,6 +23,7 @@ S = load('../out/BTpsdata.mat');
 BT= S.BT;
 %%
 for j = 1:length(BT)
+    if BT(j).badfit ==0
     % want to fit on all but t=0 (we give it this)
     time = [];
     N = [];
@@ -54,7 +55,7 @@ for j = 1:length(BT)
     BT(j).last = mean(BT(j).cellnum(end-5:end));
     thres = 3*BT(j).Nseed;
   
-     
+    end
 end
 %% Go through all of the trajectories and compare to fits
 % Use this to go through the actual counts and write down the numbers of
